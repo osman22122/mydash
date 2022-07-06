@@ -1,15 +1,20 @@
 
-{{ range $path, $_ := $.Files.Glob "dashboards/*.json" }}
-{{ $name := trimSuffix (ext $path) (base $path) }}
----
+{{- $files := .Files.Get "grafana/dashboards/*.json" }}
+{{- if $files }}
 apiVersion: v1
-kind: GrafanaDashboard
-metadata:
-  name: grafana-dashboard
-  labels:
-    grafana_dashboard: "1"
-spec:
-  json: >
-    {{- $.Files.Get $path | nindent 4 }}
-{{ end }}
+kind: ConfigMapList
+items:
+{{- range $path, $fileContents := $files }}
+{{- $dashboardName := regexReplaceAll "(^.*/)(.*)\\.json$" $path "${2}" }}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: {{ printf "%s"  $dashboardName | trunc 63 | trimSuffix "-" }}
+    namespace: {{ .Values.namespace }}
+    labels:
+      grafana_dashboard: "1"
+  data:
+    {{ $dashboardName }}.json: {{ $.Files.Get $path | toJson }}
+{{- end }}
+{{- end }}
 {{- end }}
