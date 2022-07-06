@@ -13,7 +13,8 @@ items:
     labels:
       grafana_dashboard: "1"
   data:
-    {{ $dashboardName }}.json: {{ $.Files.Get $path | toJson }}
+    {{ $dashboardName }}.json: |-
+  {{ $.Files.Get $path | toJson }}
 {{- end }}
 {{- end }}
 {{- end }}
